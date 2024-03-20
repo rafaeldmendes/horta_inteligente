@@ -1,54 +1,46 @@
-
+// ----- Definições
 #define BLYNK_PRINT Serial
-
-// #define BLYNK_TEMPLATE_ID "TMPL267NMVsc_"
-// #define BLYNK_TEMPLATE_NAME "Quickstart Template"
-// #define BLYNK_AUTH_TOKEN "IYBvRpEnE_2EvkxKHsJcmHUvimeczRIZ"
-
+#define bomba 16
+#define BOTAO_BOMBA V3
+#define ventilador 17
+#define BOTAO_VENTILADOR V4
+// ----- Credenciais do Blynk -----
 #define BLYNK_TEMPLATE_ID "TMPL2dGH2zWNI"
 #define BLYNK_TEMPLATE_NAME "Horta Inteligente"
 #define BLYNK_AUTH_TOKEN "rV9_S-0PZZbi1zJXctG07zQ4RAjvr-zE"
 
+// ----- Importações de bibliotecas -----
 #include <DHT11.h>
 #include <Blynk.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <BlynkSimpleEsp32.h>
 
-// char ssid[] = "Eu";
-// char pass[] = "Ricardo10";
+DHT11 dht(14);  //
 
-char ssid[] = "Alunos"; char pass[] = "Alunos@123";
-
-#define dht11Port 25 //
-DHT11 dht(dht11Port); //
-
-float temp; // -- DHT
-float humid; // -- DHT
+// ----- Variaveis Globais
+float temp;  // -- DHT temperatura
+float umid;  // -- DHT umidade
 int valorumidade;
+
 void modDHT11() {
   temp = dht.readTemperature();
-  humid = dht.readHumidity();
-  
-  if (temp != DHT11::ERROR_CHECKSUM && temp != DHT11::ERROR_TIMEOUT){
-  valorumidade = map(humid, 1023, 315, 0, 100); //Transforma os valores analógicos em uma escala de 0 a 100
+  umid = dht.readHumidity();
 
+  if (temp != DHT11::ERROR_CHECKSUM && temp != DHT11::ERROR_TIMEOUT) {
+    valorumidade = map(umid, 4095, 0, 0, 100);  //Transforma os valores analógicos em uma escala de 0 a 100
     Blynk.virtualWrite(V0, temp);
     Blynk.virtualWrite(V1, valorumidade);
-    // if(temp >= 27){
-    //   digitalWrite(vent, LOW);
-    //   delay(7000);
-    //   digitalWrite(vent, HIGH);
-    // }
-  }else{
+  } else {
     Serial.println(DHT11::getErrorString(temp));
   }
 }
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
-  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+  pinMode(bomba, OUTPUT);
+  pinMode(ventilador, OUTPUT);
+  Blynk.begin(BLYNK_AUTH_TOKEN, "Alunos", "Alunos@123");
   Serial.begin(9600);
 }
 
@@ -58,10 +50,32 @@ void loop() {
   modDHT11();
 
   Serial.print(temp);
-  Serial.print("||");
-  Serial.print(humid); 
-  Serial.print("||");
-  Serial.print(valorumidade); 
-  Serial.print("||");
+  Serial.print("        ");
+  // Serial.print(umid);
+  // Serial.print("||");
+  // Serial.print(valorumidade);
+  // Serial.print("||");
   delay(500);
+}
+
+BLYNK_WRITE(BOTAO_BOMBA) {
+  int estado = param.asInt();
+  Serial.print("Bomba");
+  Serial.print(estado);
+  if (estado == 1) {
+    digitalWrite(bomba, HIGH);
+  } else {
+    digitalWrite(bomba, LOW);
+  }
+}
+
+BLYNK_WRITE(BOTAO_VENTILADOR) {
+  int estado = param.asInt();
+  Serial.print("Ventilador");
+  Serial.print(estado);
+    if (estado == 1) {
+    digitalWrite(ventilador, HIGH);
+  } else {
+    digitalWrite(ventilador, LOW);
+  }
 }
